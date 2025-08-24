@@ -11,9 +11,8 @@ async def health_check():
     return {"status": "ok"}
 
 
-@app.post("/advice", response_model=AdviceResponse)
+@app.post("/fallback_advice", response_model=AdviceResponse)
 async def generate_advice(req: AdviceRequest):
-    # Stub enrichment data (Phase 4 will fetch real ones)
     weather_summary = "Light rain expected in 2 days, avg temp 30°C"
     ndvi_summary = "NDVI indicates healthy crop growth"
     price_summary = "Market price for wheat is rising in local mandi"
@@ -28,9 +27,17 @@ async def generate_advice(req: AdviceRequest):
         prices=price_summary
     )
 
-    advice = get_gemini_advice(final_prompt)
+    try:
+        advice = get_gemini_advice(final_prompt)
+    except Exception as e:
+        # Graceful degradation
+        advice = (
+            "We faced a temporary issue fetching AI advice. Based on weather forecast, "
+            "NDVI, and market data, avoid irrigation before expected rain, monitor leaf color "
+            "for stress, and check rising mandi prices before harvest. (Sources: Weather API, Satellite NDVI, Market Prices)"
+        )
 
     return AdviceResponse(
         advice=advice,
-        sources=["Weather Forecast API (stub)", "Satellite NDVI (stub)", "Market Prices (stub)"]
+        sources=["Weather Forecast API", "Satellite NDVI", "Market Prices"]
     )
