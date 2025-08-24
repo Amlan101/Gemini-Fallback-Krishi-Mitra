@@ -8,5 +8,6 @@ class AdviceRequest(BaseModel):
     crop: str
 
 class AdviceResponse(BaseModel):
+    title: str
     advice: str
     sources: List[str]

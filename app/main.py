@@ -28,16 +28,21 @@ async def generate_advice(req: AdviceRequest):
     )
 
     try:
-        advice = get_gemini_advice(final_prompt)
-    except Exception as e:
-        # Graceful degradation
-        advice = (
-            "We faced a temporary issue fetching AI advice. Based on weather forecast, "
-            "NDVI, and market data, avoid irrigation before expected rain, monitor leaf color "
-            "for stress, and check rising mandi prices before harvest. (Sources: Weather API, Satellite NDVI, Market Prices)"
+        gemini_response = get_gemini_advice(final_prompt)
+        
+        return AdviceResponse(
+            title=gemini_response["title"],
+            advice=gemini_response["advice"],
+            sources=gemini_response["sources"]
         )
-
-    return AdviceResponse(
-        advice=advice,
-        sources=["Weather Forecast API", "Satellite NDVI", "Market Prices"]
-    )
+    except Exception as e:
+        # Fallback response with structured data
+        return AdviceResponse(
+            title="Agricultural Guidance",
+            advice=(
+                "We faced a temporary issue fetching AI advice. Based on weather forecast, "
+                "NDVI, and market data, avoid irrigation before expected rain, monitor leaf color "
+                "for stress, and check rising mandi prices before harvest."
+            ),
+            sources=["Weather Forecast API", "Satellite NDVI", "Market Prices"]
+        )
